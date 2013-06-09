@@ -12,7 +12,7 @@ class SVM(svm.SVC, Classifier):
     def validate(self, param, train, label):
         return self.score(train, label)
 
-if __name__ == '__main__':
+def execute():
     #read data
     traindata = np.loadtxt(open("rawdata/train.csv", "rb"), delimiter=',', skiprows=1)
     testdata = np.loadtxt(open("rawdata/test.csv", "rb"), delimiter=',', skiprows=1)
@@ -44,3 +44,6 @@ if __name__ == '__main__':
     print 'output: ', output.shape
     filename = path.splitext(__file__)[0]
     np.savetxt(filename+".csv", output.astype(int), fmt="%d", delimiter=',')
+
+if __name__ == '__main__':
+    execute()
