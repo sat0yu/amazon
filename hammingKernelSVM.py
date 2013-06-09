@@ -3,6 +3,7 @@ import numpy as np
 from sklearn import svm
 from crossValidation import *
 import kernel
+from os import path
 
 class SVM(svm.SVC, Classifier):
     def train(self, train, label):
@@ -13,12 +14,13 @@ class SVM(svm.SVC, Classifier):
 
 if __name__ == '__main__':
     #read data
-    traindata = np.loadtxt(open("samplingdata/train.csv", "rb"), delimiter=',', skiprows=1)
-    testdata = np.loadtxt(open("samplingdata/test.csv", "rb"), delimiter=',', skiprows=1)
+    traindata = np.loadtxt(open("rawdata/train.csv", "rb"), delimiter=',', skiprows=1)
+    testdata = np.loadtxt(open("rawdata/test.csv", "rb"), delimiter=',', skiprows=1)
 
-    labels = traindata[:,0]
-    train = traindata[:,1:]
-    test = testdata[:,1:]
+    labels = traindata[:500,0]
+    train = traindata[:500,1:]
+    ids = testdata[:100,0]
+    test = testdata[:100,1:]
 
     print 'traindata shape: ', train.shape
     print 'testdata shape: ', test.shape
@@ -36,4 +38,9 @@ if __name__ == '__main__':
     clf = SVM(kernel='precomputed')
     clf.train(gram, labels)
     predictions = clf.predict(mat)
-    np.savetxt("hammingKernelSVM.csv", predictions.astype(int), fmt="%d", delimiter=',')
+    
+    #output
+    output = np.vstack((ids,predictions)).T
+    print 'output: ', output.shape
+    filename = path.splitext(__file__)[0]
+    np.savetxt(filename+".csv", output.astype(int), fmt="%d", delimiter=',')
