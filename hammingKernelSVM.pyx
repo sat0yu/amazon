@@ -26,7 +26,7 @@ def execute():
     print 'testdata shape: ', test.shape
 
     #instantiate kernel
-    hk = kernel.HammingKernel(2)
+    hk = kernel.HammingKernel(1)
 
     #precomputing
     gram = hk.gram(train)
