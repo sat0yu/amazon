@@ -42,10 +42,10 @@ def execute():
         hashdata[val] = key
     print 'hashdata: ', hashdata
 
-    labels = traindata[:500,0]
-    train = traindata[:500,1:]
-    ids = testdata[:100,0]
-    test = testdata[:100,1:]
+    labels = traindata[:,0]
+    train = traindata[:,1:]
+    ids = testdata[:,0]
+    test = testdata[:,1:]
 
     print 'traindata shape: ', train.shape
     print 'testdata shape: ', test.shape
