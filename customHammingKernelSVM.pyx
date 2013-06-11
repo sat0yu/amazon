@@ -4,6 +4,7 @@ from sklearn import svm
 from crossValidation import *
 import kernel
 from os import path
+import sys
 
 class CustomHammingKernel(kernel.Kernel):
     def __init__(self, _hash, int _idx, double _c=1.0):
@@ -17,6 +18,8 @@ class CustomHammingKernel(kernel.Kernel):
         cdef int hash_x = self.__hash.get(int(x[self.__idx]), 0)
         cdef int hash_y = self.__hash.get(int(y[self.__idx]), 0)
         cdef int diff = abs(hash_x - hash_y)
+        # print hash_x, hash_y
+        # sys.stdout.flush()
         cdef int k = 0
         for i in range(N):
             k = k + (1 if x[i] == y[i] and i != self.__idx else 0)
@@ -38,10 +41,17 @@ def execute():
     hashfile = open("hash.dat", "rb").readlines()
     hashdata = {}
     for line in hashfile:
-        key, val = map(int, line.strip().split(' '))
-        hashdata[val] = key
+        try:
+            key, val = map(int, line.strip().split(' '))
+            hashdata[val] = key
+        except ValueError:
+            print val, key
     print 'hashdata: ', hashdata
 
+    # labels = traindata[:500,0]
+    # train = traindata[:500,1:]
+    # ids = testdata[:100,0]
+    # test = testdata[:100,1:]
     labels = traindata[:,0]
     train = traindata[:,1:]
     ids = testdata[:,0]
