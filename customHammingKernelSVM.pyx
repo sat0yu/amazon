@@ -7,23 +7,23 @@ from os import path
 import sys
 
 class CustomHammingKernel(kernel.Kernel):
-    def __init__(self, _hash, int _idx, double _c=1.0):
+    def __init__(self, _hash, int _idx, double _var=1.0):
         self.__hash = _hash
         self.__idx = _idx
-        self.__c = _c
+        self.__var = _var
 
     def val(self, x, y):
         cdef int i
         cdef int N = len(x)
         cdef int hash_x = self.__hash.get(int(x[self.__idx]), 0)
         cdef int hash_y = self.__hash.get(int(y[self.__idx]), 0)
-        cdef int diff = abs(hash_x - hash_y)
+        cdef double gauss = np.exp( ( -(hash_x - hash_y)**2 )/ self.__var)
         # print hash_x, hash_y
         # sys.stdout.flush()
         cdef int k = 0
         for i in range(N):
             k = k + (1 if x[i] == y[i] and i != self.__idx else 0)
-        return k / (diff + self.__c)
+        return k*gauss
 
 class SVM(svm.SVC, Classifier):
     def train(self, train, label):
