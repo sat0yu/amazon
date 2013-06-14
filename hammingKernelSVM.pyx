@@ -17,16 +17,16 @@ def execute():
     traindata = np.loadtxt(open("rawdata/train.csv", "rb"), delimiter=',', skiprows=1)
     testdata = np.loadtxt(open("rawdata/test.csv", "rb"), delimiter=',', skiprows=1)
 
-    labels = traindata[:500,0]
-    train = traindata[:500,1:]
-    ids = testdata[:100,0]
-    test = testdata[:100,1:]
+    labels = traindata[:,0]
+    train = traindata[:,1:]
+    ids = testdata[:,0]
+    test = testdata[:,1:]
 
     print 'traindata shape: ', train.shape
     print 'testdata shape: ', test.shape
 
     #instantiate kernel
-    hk = kernel.HammingKernel(2)
+    hk = kernel.HammingKernel(3)
 
     #precomputing
     gram = hk.gram(train)
