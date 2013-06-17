@@ -17,7 +17,7 @@ class CustomHammingKernel(kernel.Kernel):
         self.__var = _var
         self.__d = _d
 
-    def val(self, np.ndarray[DTYPE_t, ndim=8] x, np.ndarray[DTYPE_t, ndim=8] y):
+    def val(self, np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[DTYPE_t, ndim=1] y):
         cdef int i
         cdef int N = len(x)
         cdef int hash_x = self.__hash.get(int(x[self.__idx]), 0)
@@ -31,8 +31,8 @@ class CustomHammingKernel(kernel.Kernel):
 
 def execute():
     #read data
-    traindata = np.loadtxt(open("rawdata/train.csv", "rb"), delimiter=',', skiprows=1)
-    testdata = np.loadtxt(open("rawdata/test.csv", "rb"), delimiter=',', skiprows=1)
+    traindata = np.loadtxt(open("rawdata/train.csv", "rb"), dtype=DTYPE, delimiter=',', skiprows=1)
+    testdata = np.loadtxt(open("rawdata/test.csv", "rb"), dtype=DTYPE, delimiter=',', skiprows=1)
     
     #read hash
     cdef int i, N
