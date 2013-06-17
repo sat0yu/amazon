@@ -38,41 +38,91 @@ def execute():
     testdata = np.loadtxt(open("rawdata/test.csv", "rb"), delimiter=',', skiprows=1)
     
     #read hash
+    cdef int i, N
+    cdef char* line
     hashfile = open("hash.dat", "rb").readlines()
+    N = len(hashfile)
     hashdata = {}
-    for line in hashfile:
+    for i in range(N):
+        line = hashfile[i]
         try:
             key, val = map(int, line.strip().split(' '))
             hashdata[val] = key
         except ValueError:
-            print val, key
-    print 'hashdata: ', hashdata
+            print line.strip().split(' ')
+    #print 'hashdata: ', hashdata
 
-    # labels = traindata[:500,0]
-    # train = traindata[:500,1:]
-    # ids = testdata[:100,0]
-    # test = testdata[:100,1:]
-    labels = traindata[:,0]
-    train = traindata[:,1:]
-    ids = testdata[:,0]
-    test = testdata[:,1:]
-
-    print 'traindata shape: ', train.shape
-    print 'testdata shape: ', test.shape
+    #separate id column from other features
+    ids = testdata[:500,0]
+    test = testdata[:500,1:]
+    #ids = testdata[:,0]
+    #test = testdata[:,1:]
 
     #instantiate kernel
     chk = CustomHammingKernel(hashdata, 0, 1.0, 2)
 
-    #precomputing
-    gram = chk.gram(train)
-    print 'gram matrix: ', gram.shape
-    mat = chk.matrix(test, train)
-    print 'test matrix: ', mat.shape
+    #initialize predictions
+    predictions = np.zeros_like(ids, dtype=np.int)
 
-    #train and classify
-    clf = SVM(kernel='precomputed')
-    clf.train(gram, labels)
-    predictions = clf.predict(mat)
+    #imbalanced data processing
+    traindata = np.random.shuffle(traindata)
+    pos = traindata[traindata[:,0]==1,:]
+    neg = traindata[traindata[:,0]==0,:]
+    cdef int nPos = pos.shape[0]
+    cdef int nNeg = neg.shape[0]
+    cdef int j, rate
+    if nPos > nNeg:
+        rate = nPos / nNeg
+        print 'pos:%d, neg:%d, rate(pos/neg):%d' % (nPos, nNeg, rate)
+        for j in range(rate):
+            if j < rate - 1:
+                data = np.vstack( (neg, pos[j*nNeg:(j+1)*nNeg,:]) )
+            else:
+                data = np.vstack( (neg, pos[j*nNeg:,:]) )
+            
+            labels = data[:,0]
+            train = data[:,1:]
+            print 'traindata shape: ', train.shape
+            print 'testdata shape: ', test.shape
+
+            #precomputing
+            gram = chk.gram(train)
+            print 'gram matrix: ', gram.shape
+            mat = chk.matrix(test, train)
+            print 'test matrix: ', mat.shape
+
+            #train and classify
+            clf = SVM(kernel='precomputed')
+            clf.train(gram, labels)
+            predictions += clf.predict(mat).astype(np.int)
+            
+    else:
+        rate = nNeg / nPos
+        print 'pos:%d, neg:%d, rate(neg/pos):%d' % (nPos, nNeg, rate)
+        for j in range(rate):
+            if j < rate - 1:
+                data = np.vstack( (pos, neg[j*nPos:(j+1)*nPos,:]) )
+            else:
+                data = np.vstack( (pos, neg[j*nPos:,:]) )
+            
+            labels = data[:,0]
+            train = data[:,1:]
+            print 'traindata shape: ', train.shape
+            print 'testdata shape: ', test.shape
+
+            #precomputing
+            gram = chk.gram(train)
+            print 'gram matrix: ', gram.shape
+            mat = chk.matrix(test, train)
+            print 'test matrix: ', mat.shape
+
+            #train and classify
+            clf = SVM(kernel='precomputed')
+            clf.train(gram, labels)
+            predictions += clf.predict(mat).astype(np.int)
+
+    #average
+    predictions = np.round( predictions.astype(np.float) / rate )
     
     #output
     output = np.vstack((ids,predictions)).T
