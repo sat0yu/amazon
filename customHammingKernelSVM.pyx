@@ -5,7 +5,7 @@ from sklearn import svm
 from crossValidation import *
 import kernel
 from os import path
-import sys
+from multiprocessing import Pool
 
 DTYPE = np.int
 ctypedef np.int_t DTYPE_t
@@ -23,11 +23,27 @@ class CustomHammingKernel(kernel.Kernel):
         cdef int hash_x = self.__hash.get(int(x[self.__idx]), 0)
         cdef int hash_y = self.__hash.get(int(y[self.__idx]), 0)
         cdef double k = np.exp( ( -(hash_x - hash_y)**2 )/ self.__var)
-        # print hash_x, hash_y
-        # sys.stdout.flush()
         for i in range(N):
             k = k + (1.0 if x[i] == y[i] else 0.0)
         return k**self.__d
+
+def train_and_test(args):
+    kernel, traindata, testdata = args
+    labels = traindata[:,0]
+    train = traindata[:,1:]
+    #print 'traindata shape: ', train.shape
+    #print 'testdata shape: ', testdata.shape
+
+    #precomputing
+    gram = kernel.gram(train)
+    print 'gram matrix: ', gram.shape
+    mat = kernel.matrix(testdata, train)
+    print 'test matrix: ', mat.shape
+
+    #train and classify
+    clf = svm.SVC(kernel='precomputed')
+    clf.fit(gram, labels)
+    return clf.predict(mat).astype(np.int)
 
 def execute():
     #read data
@@ -61,6 +77,10 @@ def execute():
     #initialize predictions
     predictions = np.zeros_like(ids, dtype=np.int)
 
+    #initialize pool and args
+    pool = Pool(2)
+    argset = []
+
     #imbalanced data processing
     np.random.shuffle(traindata)
     pos = traindata[traindata[:,0]==1,:]
@@ -73,50 +93,29 @@ def execute():
         print 'pos:%d, neg:%d, rate(pos/neg):%d' % (nPos, nNeg, rate)
         for j in range(rate):
             if j < rate - 1:
-                data = np.vstack( (neg, pos[j*nNeg:(j+1)*nNeg,:]) )
+                argset.append((
+                    chk,
+                    np.vstack( (neg, pos[j*nNeg:(j+1)*nNeg,:]) ),
+                    test,
+                ))
             else:
-                data = np.vstack( (neg, pos[j*nNeg:,:]) )
-            
-            labels = data[:,0]
-            train = data[:,1:]
-            print 'traindata shape: ', train.shape
-            print 'testdata shape: ', test.shape
-
-            #precomputing
-            gram = chk.gram(train)
-            print 'gram matrix: ', gram.shape
-            mat = chk.matrix(test, train)
-            print 'test matrix: ', mat.shape
-
-            #train and classify
-            clf = svm.SVC(kernel='precomputed')
-            clf.fit(gram, labels)
-            predictions += clf.predict(mat).astype(np.int)
+                argset.append( (chk, np.vstack( (neg, pos[j*nNeg:,:]) ), test) )
             
     else:
         rate = nNeg / nPos
         print 'pos:%d, neg:%d, rate(neg/pos):%d' % (nPos, nNeg, rate)
         for j in range(rate):
             if j < rate - 1:
-                data = np.vstack( (pos, neg[j*nPos:(j+1)*nPos,:]) )
+                argset.append((
+                    chk,
+                    np.vstack( (neg, pos[j*nPos:(j+1)*nPos,:]) ),
+                    test,
+                ))
             else:
-                data = np.vstack( (pos, neg[j*nPos:,:]) )
+                argset.append( (chk,np.vstack( (neg, pos[j*nPos:,:]) ),test) )
             
-            labels = data[:,0]
-            train = data[:,1:]
-            print 'traindata shape: ', train.shape
-            print 'testdata shape: ', test.shape
-
-            #precomputing
-            gram = chk.gram(train)
-            print 'gram matrix: ', gram.shape
-            mat = chk.matrix(test, train)
-            print 'test matrix: ', mat.shape
-
-            #train and classify
-            clf = svm.SVC(kernel='precomputed')
-            clf.fit(gram, labels)
-            predictions += clf.predict(mat).astype(np.int)
+    #multiprocessing
+    predictions = sum( pool.map(train_and_test, argset) )
 
     #average
     predictions = np.round( predictions.astype(np.float) / rate )
