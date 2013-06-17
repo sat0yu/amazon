@@ -62,7 +62,7 @@ def execute():
     predictions = np.zeros_like(ids, dtype=np.int)
 
     #imbalanced data processing
-    traindata = np.random.shuffle(traindata)
+    np.random.shuffle(traindata)
     pos = traindata[traindata[:,0]==1,:]
     neg = traindata[traindata[:,0]==0,:]
     cdef int nPos = pos.shape[0]
