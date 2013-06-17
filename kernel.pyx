@@ -4,36 +4,66 @@ cimport numpy as np
 from abc import ABCMeta, abstractmethod
 import sys
 
-class Kernel():
-    __metaclass__ = ABCMeta
-    
-    @abstractmethod
-    def val(self, X1, X2): pass
+DTYPE_int = np.int
+DTYPE_float = np.float
+ctypedef np.int_t DTYPE_int_t
+ctypedef np.float_t DTYPE_float_t
 
-    def gram(self, X):
-        cdef N = len(X)
-        gm = np.identity(N)
-        cdef i,j
+class IntKernel():
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def val(self, np.ndarray[DTYPE_int_t, ndim=2] X1, np.ndarray[DTYPE_int_t, ndim=2] X2): pass
+
+    def gram(self, np.ndarray[DTYPE_int_t, ndim=2] X):
+        cdef int N = len(X)
+        cdef np.ndarray[DTYPE_int_t, ndim=2] gm = np.identity(N, dtype=DTYPE_int)
+        cdef int i,j
         for i in range(N):
             for j in range(i, N):
                 gm[j][i] = gm[i][j] = self.val(X[i], X[j])
         return gm
 
-    def matrix(self, X1, X2):
+    def matrix(self, np.ndarray[DTYPE_int_t, ndim=2] X1, np.ndarray[DTYPE_int_t, ndim=2] X2):
         cdef int N = len(X1)
         cdef int M = len(X2)
-        mat = np.zeros((N,M))
+        cdef np.ndarray[DTYPE_int_t, ndim=2] mat = np.zeros((N,M), dtype=DTYPE_int)
         cdef int i,j
         for i in range(N):
             for j in range(M):
                 mat[i][j] = self.val(X1[i], X2[j])
         return mat
 
-class HammingKernel(Kernel):
+class FloatKernel():
+    __metaclass__ = ABCMeta
+    
+    @abstractmethod
+    def val(self, np.ndarray[DTYPE_float_t, ndim=2] X1, np.ndarray[DTYPE_float_t, ndim=2] X2): pass
+
+    def gram(self, np.ndarray[DTYPE_float_t, ndim=2] X):
+        cdef int N = len(X)
+        cdef np.ndarray[DTYPE_float_t, ndim=2] gm = np.identity(N, dtype=DTYPE_float)
+        cdef int i,j
+        for i in range(N):
+            for j in range(i, N):
+                gm[j][i] = gm[i][j] = self.val(X[i], X[j])
+        return gm
+
+    def matrix(self, np.ndarray[DTYPE_float_t, ndim=2] X1, np.ndarray[DTYPE_float_t, ndim=2] X2):
+        cdef int N = len(X1)
+        cdef int M = len(X2)
+        cdef np.ndarray[DTYPE_float_t, ndim=2] mat = np.zeros((N,M), dtype=DTYPE_float)
+        cdef int i,j
+        for i in range(N):
+            for j in range(M):
+                mat[i][j] = self.val(X1[i], X2[j])
+        return mat
+
+class HammingKernel(IntKernel):
     def __init__(self, int d=1):
         self.__d = d
 
-    def val(self, x, y):
+    def val(self, np.ndarray[DTYPE_int_t, ndim=1] x, np.ndarray[DTYPE_int_t, ndim=1] y):
         cdef int i
         cdef int N = len(x)
         cdef int k = 0
@@ -41,11 +71,11 @@ class HammingKernel(Kernel):
             k = k + (1 if x[i] == y[i] else 0)
         return k**self.__d
 
-class GaussKernel(Kernel):
+class GaussKernel(FloatKernel):
     def __init__(self, double beta):
         self.__beta = beta
 
-    def val(self, vec1, vec2):
+    def val(self, np.ndarray[DTYPE_float_t, ndim=1] vec1, np.ndarray[DTYPE_float_t, ndim=1] vec2):
         cdef double dist = np.linalg.norm(vec1-vec2)
         return np.exp(-self.__beta*(dist**2))
 
