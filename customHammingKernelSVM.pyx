@@ -1,10 +1,14 @@
 #coding: utf-8;
 import numpy as np
+cimport numpy as np
 from sklearn import svm
 from crossValidation import *
 import kernel
 from os import path
 import sys
+
+DTYPE = np.int
+ctypedef np.int_t DTYPE_t
 
 class CustomHammingKernel(kernel.Kernel):
     def __init__(self, _hash, int _idx, double _var=1.0, int _d=1):
@@ -13,7 +17,7 @@ class CustomHammingKernel(kernel.Kernel):
         self.__var = _var
         self.__d = _d
 
-    def val(self, x, y):
+    def val(self, np.ndarray[DTYPE_t, ndim=8] x, np.ndarray[DTYPE_t, ndim=8] y):
         cdef int i
         cdef int N = len(x)
         cdef int hash_x = self.__hash.get(int(x[self.__idx]), 0)
@@ -24,13 +28,6 @@ class CustomHammingKernel(kernel.Kernel):
         for i in range(N):
             k = k + (1.0 if x[i] == y[i] else 0.0)
         return k**self.__d
-
-class SVM(svm.SVC, Classifier):
-    def train(self, train, label):
-        self.fit(train, label)
-
-    def validate(self, param, train, label):
-        return self.score(train, label)
 
 def execute():
     #read data
@@ -53,10 +50,10 @@ def execute():
     #print 'hashdata: ', hashdata
 
     #separate id column from other features
-    ids = testdata[:500,0]
-    test = testdata[:500,1:]
-    #ids = testdata[:,0]
-    #test = testdata[:,1:]
+    #ids = testdata[:500,0]
+    #test = testdata[:500,1:]
+    ids = testdata[:,0]
+    test = testdata[:,1:]
 
     #instantiate kernel
     chk = CustomHammingKernel(hashdata, 0, 1.0, 2)
@@ -92,8 +89,8 @@ def execute():
             print 'test matrix: ', mat.shape
 
             #train and classify
-            clf = SVM(kernel='precomputed')
-            clf.train(gram, labels)
+            clf = svm.SVC(kernel='precomputed')
+            clf.fit(gram, labels)
             predictions += clf.predict(mat).astype(np.int)
             
     else:
@@ -117,8 +114,8 @@ def execute():
             print 'test matrix: ', mat.shape
 
             #train and classify
-            clf = SVM(kernel='precomputed')
-            clf.train(gram, labels)
+            clf = svm.SVC(kernel='precomputed')
+            clf.fit(gram, labels)
             predictions += clf.predict(mat).astype(np.int)
 
     #average
