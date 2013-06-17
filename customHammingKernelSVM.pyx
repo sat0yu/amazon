@@ -61,10 +61,11 @@ def execute():
     #instantiate kernel
     chk = CustomHammingKernel(hashdata, 0, 1.0, 2)
 
-    #initialize predistions
+    #initialize predictions
     predictions = np.zeros_like(ids, dtype=np.int)
 
     #imbalanced data processing
+    traindata = np.random.shuffle(traindata)
     pos = traindata[traindata[:,0]==1,:]
     neg = traindata[traindata[:,0]==0,:]
     cdef int nPos = pos.shape[0]
@@ -74,7 +75,10 @@ def execute():
         rate = nPos / nNeg
         print 'pos:%d, neg:%d, rate(pos/neg):%d' % (nPos, nNeg, rate)
         for j in range(rate):
-            data = np.vstack( (neg, pos[j*nNeg:(j+1)*nNeg,:]) )
+            if j < rate - 1:
+                data = np.vstack( (neg, pos[j*nNeg:(j+1)*nNeg,:]) )
+            else:
+                data = np.vstack( (neg, pos[j*nNeg:,:]) )
             
             labels = data[:,0]
             train = data[:,1:]
@@ -96,7 +100,10 @@ def execute():
         rate = nNeg / nPos
         print 'pos:%d, neg:%d, rate(neg/pos):%d' % (nPos, nNeg, rate)
         for j in range(rate):
-            data = np.vstack( (pos, neg[j*nPos:(j+1)*nPos,:]) )
+            if j < rate - 1:
+                data = np.vstack( (pos, neg[j*nPos:(j+1)*nPos,:]) )
+            else:
+                data = np.vstack( (pos, neg[j*nPos:,:]) )
             
             labels = data[:,0]
             train = data[:,1:]
@@ -113,7 +120,9 @@ def execute():
             clf = SVM(kernel='precomputed')
             clf.train(gram, labels)
             predictions += clf.predict(mat).astype(np.int)
-        
+
+    #average
+    predictions = np.round( predictions.astype(np.float) / rate )
     
     #output
     output = np.vstack((ids,predictions)).T
