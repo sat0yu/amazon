@@ -17,7 +17,7 @@ class IntKernel():
 
     def gram(self, np.ndarray[DTYPE_int_t, ndim=2] X):
         cdef int N = len(X)
-        cdef np.ndarray[DTYPE_int_t, ndim=2] gm = np.identity(N, dtype=DTYPE_int)
+        cdef np.ndarray[DTYPE_float_t, ndim=2] gm = np.identity(N, dtype=DTYPE_float)
         cdef int i,j
         for i in range(N):
             for j in range(i, N):
@@ -27,7 +27,7 @@ class IntKernel():
     def matrix(self, np.ndarray[DTYPE_int_t, ndim=2] X1, np.ndarray[DTYPE_int_t, ndim=2] X2):
         cdef int N = len(X1)
         cdef int M = len(X2)
-        cdef np.ndarray[DTYPE_int_t, ndim=2] mat = np.zeros((N,M), dtype=DTYPE_int)
+        cdef np.ndarray[DTYPE_float_t, ndim=2] mat = np.zeros((N,M), dtype=DTYPE_float)
         cdef int i,j
         for i in range(N):
             for j in range(M):
