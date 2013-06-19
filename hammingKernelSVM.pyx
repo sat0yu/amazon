@@ -2,8 +2,10 @@
 import numpy as np
 from sklearn import svm
 from crossValidation import *
-import kernel
 from os import path
+
+import pyximport; pyximport.install(inplace=True)
+import kernel
 
 class SVM(svm.SVC, Classifier):
     def train(self, train, label):
