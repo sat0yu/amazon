@@ -9,6 +9,7 @@ from multiprocessing import Pool
 import pyximport
 pyximport.install(setup_args={'include_dirs':[np.get_include()]}, inplace=True)
 import kernel
+import mlutil
 
 DTYPE_int = np.int
 DTYPE_float = np.float
@@ -75,6 +76,7 @@ def execute():
     np.random.shuffle(traindata)
     pos = traindata[traindata[:,0]==1,:]
     neg = traindata[traindata[:,0]==0,:]
+    neg = np.vstack( (neg, mlutil.randomSwapOverSampling(neg)) )
     cdef int nPos = pos.shape[0]
     cdef int nNeg = neg.shape[0]
     cdef int j, rate
