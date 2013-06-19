@@ -3,9 +3,11 @@ import numpy as np
 cimport numpy as np
 from sklearn import svm
 from crossValidation import *
-import kernel
 from os import path
 from multiprocessing import Pool
+
+import pyximport; pyximport.install(inplace=True)
+import kernel
 
 DTYPE_int = np.int
 DTYPE_float = np.float
