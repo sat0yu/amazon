@@ -59,7 +59,7 @@ def execute():
 
     #instantiate kernel
     uniq = np.array([7519, 4244, 129, 178, 450, 344, 2359, 68, 344], dtype=DTYPE_float)
-    whk = WeightendHammingKernel(uniq/max(uniq), 2.0)
+    whk = WeightendHammingKernel(uniq/max(uniq), 1)
 
     #initialize predictions
     predictions = np.zeros_like(ids, dtype=np.int)
