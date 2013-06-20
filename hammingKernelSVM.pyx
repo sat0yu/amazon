@@ -4,7 +4,8 @@ from sklearn import svm
 from crossValidation import *
 from os import path
 
-import pyximport; pyximport.install(inplace=True)
+import pyximport
+pyximport.install(setup_args={'include_dirs':[np.get_include()]}, inplace=True)
 import kernel
 
 class SVM(svm.SVC, Classifier):

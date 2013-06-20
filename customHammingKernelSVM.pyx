@@ -6,13 +6,14 @@ from crossValidation import *
 from os import path
 from multiprocessing import Pool
 
-import pyximport; pyximport.install(inplace=True)
+import pyximport
+pyximport.install(setup_args={'include_dirs':[np.get_include()]}, inplace=True)
 import kernel
 
 DTYPE = np.int
 ctypedef np.int_t DTYPE_t
 
-class CustomHammingKernel(kernel.Kernel):
+class CustomHammingKernel(kernel.IntKernel):
     def __init__(self, _hash, int _idx, double _var=1.0, int _d=1):
         self.__hash = _hash
         self.__idx = _idx

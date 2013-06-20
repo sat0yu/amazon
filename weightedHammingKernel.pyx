@@ -6,7 +6,8 @@ from crossValidation import *
 from os import path
 from multiprocessing import Pool
 
-import pyximport; pyximport.install(inplace=True)
+import pyximport
+pyximport.install(setup_args={'include_dirs':[np.get_include()]}, inplace=True)
 import kernel
 
 DTYPE_int = np.int
