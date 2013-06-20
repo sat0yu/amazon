@@ -63,7 +63,7 @@ def execute():
 
     #instantiate kernel
     uniq = np.array([7519, 4244, 129, 178, 450, 344, 2359, 68, 344], dtype=DTYPE_float)
-    whk = WeightendHammingKernel(uniq/max(uniq), 1)
+    whk = WeightendHammingKernel(uniq/max(uniq), 2)
 
     #initialize predictions
     predictions = np.zeros_like(ids, dtype=np.int)
@@ -76,7 +76,7 @@ def execute():
     np.random.shuffle(traindata)
     pos = traindata[traindata[:,0]==1,:]
     neg = traindata[traindata[:,0]==0,:]
-    neg = np.vstack( (neg, mlutil.randomSwapOverSampling(neg)) )
+    neg = np.vstack( (neg, mlutil.randomSwapOverSampling(neg, 4)) )
     cdef int nPos = pos.shape[0]
     cdef int nNeg = neg.shape[0]
     cdef int j, rate
