@@ -33,3 +33,27 @@ def randomSwapOverSampling(np.ndarray[DTYPE_int_t, ndim=2] X, int gain_ratio=1):
             gained = np.vstack((gained, created))
 
     return gained
+
+def dividingUnderSampling(np.ndarray[DTYPE_int_t, ndim=2] major, np.ndarray[DTYPE_int_t, ndim=2] minor):
+    cdef list trainset = []
+    cdef int i, idx
+    cdef int nMajor = major.shape[0]
+    cdef int nMinor = minor.shape[0]
+    cdef int ratio = nMajor / nMinor
+    
+    # validation arguments
+    if not ratio > 0:
+        raise ValueError('Requied two arguments, the former\'s length is larger than later\'s')
+    if major.shape[1] is not minor.shape[1]:
+        raise ValueError('Requied two arguments, those size is the same')
+
+    # divide and concatenate, and create train
+    np.random.shuffle(major)
+    for i in range(ratio):
+        idx = i * nMinor
+        if i < ratio - 1:
+            trainset.append( np.vstack( (minor, major[idx:idx+nMinor,:]) ) )
+        else:
+            trainset.append( np.vstack( (minor, major[idx:,:]) ) )
+
+    return trainset
