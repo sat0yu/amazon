@@ -38,10 +38,13 @@ def train_and_test(args):
     train = traindata[:,1:]
 
     #precomputing
+    print 'gram matrix processing start'
     gram = kernel.gram(train)
-    print 'gram matrix: ', gram.shape, gram.dtype
+    print 'gram matrix: ', gram.shape, gram.dtype, 'processing end'
+    
+    print 'test matrix processing start'
     mat = kernel.matrix(testdata, train)
-    print 'test matrix: ', mat.shape, mat.dtype
+    print 'test matrix: ', mat.shape, mat.dtype, 'processing end'
 
     #train and classify
     clf = svm.SVC(kernel='precomputed')
@@ -73,40 +76,19 @@ def execute():
     argset = []
 
     #imbalanced data processing
-    np.random.shuffle(traindata)
     pos = traindata[traindata[:,0]==1,:]
     neg = traindata[traindata[:,0]==0,:]
-    neg = np.vstack( (neg, mlutil.randomSwapOverSampling(neg)) )
-    cdef int nPos = pos.shape[0]
-    cdef int nNeg = neg.shape[0]
-    cdef int j, rate
-    if nPos > nNeg:
-        rate = nPos / nNeg
-        print 'pos:%d, neg:%d, rate(pos/neg):%d' % (nPos, nNeg, rate)
-        for j in range(rate):
-            if j < rate - 1:
-                argset.append((
-                    whk,
-                    np.vstack( (neg, pos[j*nNeg:(j+1)*nNeg,:]) ),
-                    test,
-                ))
-            else:
-                argset.append( (whk, np.vstack( (neg, pos[j*nNeg:,:]) ), test) )
-
-    else:
-        rate = nNeg / nPos
-        print 'pos:%d, neg:%d, rate(neg/pos):%d' % (nPos, nNeg, rate)
-        for j in range(rate):
-            if j < rate - 1:
-                argset.append((
-                    whk,
-                    np.vstack( (neg, pos[j*nPos:(j+1)*nPos,:]) ),
-                    test,
-                ))
-            else:
-                argset.append( (whk,np.vstack( (neg, pos[j*nPos:,:]) ),test) )
+    rate = len(pos) / len(neg)
+    ## RSOS
+    gain = mlutil.randomSwapOverSampling(neg)
+    neg = np.vstack( (neg, gain) )
+    print 'given %d minority data' % len(gain)
+    ## DUS
+    trainset = mlutil.dividingUnderSampling(pos, neg)
+    print 'given %d trainset' % len(trainset)
 
     #multiprocessing
+    argset = [ (whk,t,test) for t in trainset ]
     predictions = sum( pool.map(train_and_test, argset) )
 
     #average
