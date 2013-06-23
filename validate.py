@@ -1,7 +1,9 @@
 #coding: utf-8;
 import numpy as np
 from os import path
+import sys
 from sklearn import svm
+from multiprocessing import Pool
 
 import pyximport
 pyximport.install(setup_args={'include_dirs':[np.get_include()]}, inplace=True)
@@ -48,6 +50,7 @@ def execute():
     #RSOS
     eval_ratio = range( int( nPosdata / nNegdata ) )
     evaluates = []
+    args = []
     for i in eval_ratio:
         if i == 0:
             gained = metaneg
@@ -55,8 +58,12 @@ def execute():
             gained = np.vstack( (metaneg, mlutil.randomSwapOverSampling(metaneg, i)) )
         metatrain = np.vstack( (metapos, gained) )
         print 'meta train [%d]: ' % i, metatrain.shape
-        predict = train_and_predictoin(whk, metatrain, metatest)
+        args.append( (whk, metatrain, metatest) )
+    
+    pool = Pool(4)
+    predicts = pool.map(train_and_predictoin, args)
 
+    for i, predict in enumerate(predicts):
         #print result
         table = np.vstack((metalabels, predict)).T
         ap = table[table[:,0]==1,:]
@@ -65,13 +72,16 @@ def execute():
         tn = sum( (an[:,0] == an[:,1]) ) / float( len(an) )
         g = ( float(tp) * float(tn) )**0.5
         print 'g [%d]: ' % i, g
+        sys.stdout.flush()
 
         #output
         output = np.vstack((metalabels, predict)).T
         filename = path.splitext(__file__)[0] + '_' + str(i)
         np.savetxt(filename+".csv", output.astype(int), fmt="%d", delimiter=',')
 
-def train_and_predictoin(kernel, traindata, test):
+def train_and_predictoin(args):
+    kernel, traindata, test = args
+
     #separate ACTION column from other features
     labels = traindata[:,0]
     train = traindata[:,1:]
