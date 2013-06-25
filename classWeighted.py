@@ -48,8 +48,9 @@ def execute():
     print 'gram matrix: ', gram.shape, gram.dtype, 'processing end'
     
     #train
-    clf = svm.SVC(kernel='precomputed', class_weight='auto')
-    #clf = svm.SVC(kernel='precomputed')
+    clf_cw = svm.SVC(kernel='precomputed', class_weight='auto')
+    clf = svm.SVC(kernel='precomputed')
+    clf_cw.fit(gram, labels)
     clf.fit(gram, labels)
 
     #precomputing
@@ -61,8 +62,21 @@ def execute():
     print 'test matrix: ', mat.shape, mat.dtype, 'processing end'
 
     #classify    
+    prediction_cw = clf_cw.predict(mat).astype(np.int)
     prediction = clf.predict(mat).astype(np.int)
-    print 'predictoin : ', prediction.shape, prediction.dtype
+
+    #output cw
+    output = np.vstack((metalabels, prediction_cw)).T
+    ap = output[output[:,0]==1,:]
+    an = output[output[:,0]==0,:]
+    tp = sum( (ap[:,0] == ap[:,1]) ) / float( len(ap) )
+    tn = sum( (an[:,0] == an[:,1]) ) / float( len(an) )
+    g = ( float(tp) * float(tn) )**0.5
+    print 'sensitivity(cw) : ', tp
+    print 'specificity(cw) : ', tn
+    print 'g(cw) : ', g
+    filename = path.splitext(__file__)[0]
+    np.savetxt(filename+"_cw.csv", output.astype(int), fmt="%d", delimiter=',')
 
     #output
     output = np.vstack((metalabels, prediction)).T
