@@ -47,11 +47,15 @@ def execute():
     gram = whk.gram(metatrain)
     print 'gram matrix: ', gram.shape, gram.dtype, 'processing end'
     
-    #train
-    clf_cw = svm.SVC(kernel='precomputed', class_weight='auto')
-    clf = svm.SVC(kernel='precomputed')
-    clf_cw.fit(gram, labels)
-    clf.fit(gram, labels)
+    #initialize classifiers
+    clfs = []
+    weight_list = [0.1, 0.2, 0.5, 1, 2, 5]
+    for i in weight_list:
+        for j in weight_list:
+            clfs.append( svm.SVC(kernel='precomputed', class_weight={0:i, 1:j}) )
+
+    #train each classifier
+    map(lambda clf_i: clf_i.fit(gram, labels), clfs)
 
     #precomputing
     #separate id column from other features
@@ -62,34 +66,22 @@ def execute():
     print 'test matrix: ', mat.shape, mat.dtype, 'processing end'
 
     #classify    
-    prediction_cw = clf_cw.predict(mat).astype(np.int)
-    prediction = clf.predict(mat).astype(np.int)
+    for i,w0 in enumerate(weight_list):
+        for j,w1 in enumerate(weight_list):
+            prediction = clfs[i*len(weight_list)+j].predict(mat).astype(np.int)
 
-    #output cw
-    output = np.vstack((metalabels, prediction_cw)).T
-    ap = output[output[:,0]==1,:]
-    an = output[output[:,0]==0,:]
-    tp = sum( (ap[:,0] == ap[:,1]) ) / float( len(ap) )
-    tn = sum( (an[:,0] == an[:,1]) ) / float( len(an) )
-    g = ( float(tp) * float(tn) )**0.5
-    print 'sensitivity(cw) : ', tp
-    print 'specificity(cw) : ', tn
-    print 'g(cw) : ', g
-    filename = path.splitext(__file__)[0]
-    np.savetxt(filename+"_cw.csv", output.astype(int), fmt="%d", delimiter=',')
-
-    #output
-    output = np.vstack((metalabels, prediction)).T
-    ap = output[output[:,0]==1,:]
-    an = output[output[:,0]==0,:]
-    tp = sum( (ap[:,0] == ap[:,1]) ) / float( len(ap) )
-    tn = sum( (an[:,0] == an[:,1]) ) / float( len(an) )
-    g = ( float(tp) * float(tn) )**0.5
-    print 'sensitivity : ', tp
-    print 'specificity : ', tn
-    print 'g : ', g
-    filename = path.splitext(__file__)[0]
-    np.savetxt(filename+".csv", output.astype(int), fmt="%d", delimiter=',')
+            #output
+            output = np.vstack((metalabels, prediction)).T
+            ap = output[output[:,0]==1,:]
+            an = output[output[:,0]==0,:]
+            tp = sum( (ap[:,0] == ap[:,1]) ) / float( len(ap) )
+            tn = sum( (an[:,0] == an[:,1]) ) / float( len(an) )
+            g = ( float(tp) * float(tn) )**0.5
+            print 'w0:%.1f,w1:%.1f,%lf,%lf,%lf' % (w0,w1,tp,tn,g)
+            filename = path.splitext(__file__)[0]
+            filename += "_" + str(w0) + "_" + str(w1) 
+            filename += ".csv"
+            np.savetxt(filename, output.astype(int), fmt="%d", delimiter=',')
 
 if __name__ == '__main__':
     execute()
