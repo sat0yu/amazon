@@ -1,0 +1,14 @@
+meta traindata:  (11710, 10)
+meta testdata:  (21059, 10)
+meta train pos data:  (11033, 10)
+meta train neg data:  (677, 10)
+given 16 trainset
+rate:1,0.762942,0.740164,0.751467
+given 8 trainset
+rate:2,0.937346,0.526230,0.702324
+given 4 trainset
+rate:4,0.972781,0.395902,0.620585
+given 2 trainset
+rate:8,0.983215,0.294262,0.537888
+given 1 trainset
+rate:16,0.994808,0.156557,0.394645
