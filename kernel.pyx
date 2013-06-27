@@ -59,6 +59,43 @@ class FloatKernel():
                 mat[i][j] = self.val(X1[i], X2[j])
         return mat
 
+class WeightendHammingKernel(IntKernel):
+    def __init__(self, np.ndarray[DTYPE_float_t, ndim=1] _w, int _d=1):
+        self.__w = _w
+        self.__dim = len(_w)
+        self.__d = _d
+
+    def val(self, np.ndarray[DTYPE_int_t, ndim=1] x, np.ndarray[DTYPE_int_t, ndim=1] y):
+        # if not ( self.__dim == len(x) and self.__dim == len(y) ):
+        #     raise ValueError('Required two arguments, those size are the same as the weight vector\'s one')
+
+        # in numpy, == operator of ndarrays means
+        # correspondings for each feature
+        correspondings = (x == y)
+
+        # in numpy, True equals 1 and False equals 0
+        # so, numpy.dot() can calculate expectedly
+        return (np.dot(self.__w, correspondings))**self.__d
+
+class CustomHammingKernel(IntKernel):
+    def __init__(self, _hash, int _idx, double _var=1.0, int _d=1):
+        self.__hash = _hash
+        self.__idx = _idx
+        self.__var = _var
+        self.__d = _d
+
+    def val(self, np.ndarray[DTYPE_int_t, ndim=1] x, np.ndarray[DTYPE_int_t, ndim=1] y):
+        cdef int i
+        cdef int N = len(x)
+        cdef int hash_x = self.__hash.get(x[self.__idx], 0)
+        cdef int hash_y = self.__hash.get(y[self.__idx], 0)
+        cdef double gauss = np.exp( ( -(hash_x - hash_y)**2 )/ self.__var)
+        cdef int match = 0
+        for i in range(N):
+            match = match + (1 if x[i] == y[i] else 0)
+
+        return ( gauss + float(match) )**self.__d
+
 class HammingKernel(IntKernel):
     def __init__(self, int d=1):
         self.__d = d
