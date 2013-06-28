@@ -7,6 +7,36 @@ DTYPE_float = np.float
 ctypedef np.int_t DTYPE_int_t
 ctypedef np.float_t DTYPE_float_t
 
+def createLabeledDataset(np.ndarray[DTYPE_int_t, ndim=2] labeled, np.ndarray[DTYPE_int_t, ndim=2] unlabeled, int label_idx=0):
+    cdef float nLabeled = float(labeled.shape[0])
+    cdef float nUnlabeled = float(unlabeled.shape[0])
+    cdef float ratio = nUnlabeled / nLabeled
+
+    np.random.shuffle(labeled)
+    cdef np.ndarray[DTYPE_int_t, ndim=2] posdata = labeled[labeled[:,label_idx]==1,:]
+    cdef np.ndarray[DTYPE_int_t, ndim=2] negdata = labeled[labeled[:,label_idx]==0,:]
+    cdef float nPosdata = float(posdata.shape[0])
+    cdef float nNegdata = float(negdata.shape[0])
+
+    # HOW TO CALC. nMetaLabeled
+    #------------------------------
+    # nLabeled      | nUnlabeled (= nLabeled * ratio)
+    # nMetaLabeled  | nMetaUnlabeled (= nMetalabeled * ratio)
+    #------------------------------
+    # nMetalabeled + nMetaUnlabeled = nLabeled
+    # nMetalabeled + (nMetaLabeled * ratio) = nLabeled
+    # nMetalabeled = nLabeled / (1 + ratio)
+
+    cdef int nMetaLabeled = int( nLabeled / (1. + ratio) )
+    cdef float scale = float(nMetaLabeled) / float(nLabeled)
+    cdef int nMetaPos = int( nPosdata * scale )
+    cdef int nMetaNeg = int( nNegdata * scale )
+
+    cdef np.ndarray[DTYPE_int_t, ndim=2] metaLabeled = np.vstack( (posdata[:nMetaPos,:], negdata[:nMetaNeg,:]) )
+    cdef np.ndarray[DTYPE_int_t, ndim=2] metaUnlabeled = np.vstack( (posdata[nMetaPos:,:], negdata[nMetaNeg:,:]) )
+
+    return (metaLabeled, metaUnlabeled)
+
 def randomSwapOverSampling(np.ndarray[DTYPE_int_t, ndim=2] X, int gain_ratio=1):
     cdef int N = len(X)
     cdef int dim = len(X[0])
