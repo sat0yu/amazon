@@ -53,9 +53,9 @@ def execute():
     print 'negative data: %d' % len(neg)
     
     ## RSOS
-    gain = mlutil.randomSwapOverSampling(neg)
-    neg = np.vstack( (neg, gain) )
-    print 'given %d minority data' % len(gain)
+    # gain = mlutil.randomSwapOverSampling(neg)
+    # neg = np.vstack( (neg, gain) )
+    # print 'given %d minority data' % len(gain)
 
     ## DUS
     trainset = mlutil.dividingUnderSampling(pos, neg, ratio=2)
