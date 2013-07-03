@@ -85,28 +85,18 @@ class CustomHammingKernel(IntKernel):
         self.__d = _d
 
     def val(self, np.ndarray[DTYPE_int_t, ndim=1] x, np.ndarray[DTYPE_int_t, ndim=1] y):
-        cdef int i
-        cdef int N = len(x)
         cdef int hash_x = self.__hash.get(x[self.__idx], 0)
         cdef int hash_y = self.__hash.get(y[self.__idx], 0)
         cdef double gauss = np.exp( ( -(hash_x - hash_y)**2 )/ self.__var)
-        cdef int match = 0
-        for i in range(N):
-            match = match + (1 if x[i] == y[i] else 0)
 
-        return ( gauss + float(match) )**self.__d
+        return ( gauss + float(sum( x == y )) )**self.__d
 
 class HammingKernel(IntKernel):
     def __init__(self, int d=1):
         self.__d = d
 
     def val(self, np.ndarray[DTYPE_int_t, ndim=1] x, np.ndarray[DTYPE_int_t, ndim=1] y):
-        cdef int i
-        cdef int N = len(x)
-        cdef int k = 0
-        for i in range(N):
-            k = k + (1 if x[i] == y[i] else 0)
-        return k**self.__d
+        return sum( x == y )**self.__d
 
 class GaussKernel(FloatKernel):
     def __init__(self, double beta):
