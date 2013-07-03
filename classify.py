@@ -43,8 +43,7 @@ def execute():
     test = testdata[:,1:]
 
     #instantiate kernel
-    uniq = np.array([7519, 4244, 129, 178, 450, 344, 2359, 68, 344], dtype=np.float)
-    whk = kernel.WeightendHammingKernel(uniq/max(uniq), 2)
+    hk = kernel.HammingKernel(2)
 
     #imbalanced data processing
     pos = traindata[traindata[:,0]==1,:]
@@ -64,7 +63,7 @@ def execute():
 
     #multiprocessing
     pool = Pool(4)
-    argset = [ (i,whk,t,test) for i,t in enumerate(trainset) ]
+    argset = [ (i,hk,t,test) for i,t in enumerate(trainset) ]
     predictions = pool.map(train_and_test, argset)
 
     #average
