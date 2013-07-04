@@ -26,16 +26,30 @@ def weak_classifier(args):
     print '[%d] target matrix processing start (%d,%d)' % (i,len(target),len(train))
     target_mat = kernel.matrix(target, train)
 
-    #train
-    #class_weight set as auto mode
+    #train, class_weight set to auto mode
     clf = svm.SVC(kernel='precomputed', class_weight='auto')
     clf.fit(gram, labels)
 
     #evaluate classifier
-    err = sum( answers != clf.predict(test_mat).astype(np.int) ) / float(len(evaldata))
+    predict = clf.predict(test_mat).astype(np.int)
+
+    ## since presict.shape is equal answers.shape,
+    ## answers indices can be used as predict indices
+    posPredict = predict[answers[:]==1]
+    negPredict = predict[answers[:]==0]
+
+    ## posCorrect(negPredict) is represented on {0, 1}
+    nPosCorrect = float( sum(posPredict) )
+    nNegCorrect = float( len(negPredict) - sum(negPredict) )
+    accP = nPosCorrect / len( answers[answers[:]==1] )
+    accN = nNegCorrect / len( answers[answers[:]==0] )
+
+    ## calc. err as (1 - g)
+    ## g is the geometric mean of accP and accN
+    err = 1 - np.sqrt(accP * accN) if accP*accN < 1. else 0.000001
     beta = np.sqrt( err / (1 - err) )
     alpha = np.log( 1 / beta )
-    print "[%d] err: %f, beta: %f, alpha: %f" % (i,err,beta,alpha)
+    print "[%d] acc+: %f, acc-: %f, err: %f, beta: %f, alpha: %f" % (i,accP,accN,err,beta,alpha)
 
     #classify
     predict = clf.predict(target_mat).astype(np.int)
