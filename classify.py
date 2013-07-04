@@ -43,7 +43,15 @@ def execute():
     test = testdata[:,1:]
 
     #instantiate kernel
-    hk = kernel.HammingKernel(2)
+    hashfile = open("hash.dat", "rb").readlines()
+    hashdata = {}
+    for line in hashfile:
+        try:
+            key, val = map(int, line.strip().split(' '))
+            hashdata[val] = key
+        except ValueError:
+            print line.strip().split(' ')
+    chk = kernel.CustomHammingKernel(hashdata, 0, 1.0, 2)
 
     #imbalanced data processing
     pos = traindata[traindata[:,0]==1,:]
@@ -63,7 +71,7 @@ def execute():
 
     #multiprocessing
     pool = Pool(4)
-    argset = [ (i,hk,t,test) for i,t in enumerate(trainset) ]
+    argset = [ (i,chk,t,test) for i,t in enumerate(trainset) ]
     predictions = pool.map(train_and_test, argset)
 
     #average
