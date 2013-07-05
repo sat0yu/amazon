@@ -3,6 +3,7 @@ import numpy as np
 from sklearn import svm
 from os import path
 from multiprocessing import Pool
+import sys
 
 import pyximport
 pyximport.install(setup_args={'include_dirs':[np.get_include()]}, inplace=True)
@@ -50,6 +51,7 @@ def weak_classifier(args):
     beta = np.sqrt( err / (1 - err) )
     alpha = np.log( 1 / beta )
     print "[%d] acc+: %f, acc-: %f, err: %f, beta: %f, alpha: %f" % (i,accP,accN,err,beta,alpha)
+    sys.stdout.flush()
 
     #classify
     predict = clf.predict(target_mat).astype(np.int)
