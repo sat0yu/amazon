@@ -74,7 +74,7 @@ def execute():
 
     #instantiate kernel
     uniq = np.array([7519, 4244, 129, 178, 450, 344, 2359, 68, 344], dtype=np.float)
-    whk = kernel.WeightendHammingKernel(uniq/max(uniq), 2)
+    whk = kernel.WeightendHammingKernel(uniq/max(uniq), 3)
 
     #imbalanced data processing
     pos = traindata[traindata[:,0]==1,:]
@@ -83,7 +83,7 @@ def execute():
     print 'negative data: %d' % len(neg)
     
     ## DUS
-    trainset = mlutil.dividingUnderSampling(pos, neg, ratio=2)
+    trainset = mlutil.dividingUnderSampling(pos, neg, ratio=3)
     print 'given %d trainset' % len(trainset)
     print 'each traindata of trainset: ', trainset[0].shape
 
