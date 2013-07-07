@@ -1,0 +1,52 @@
+meta traindata:  (11710, 10)
+meta train pos data:  (11033, 10)
+meta train neg data:  (677, 10)
+meta testdata:  (21059, 10)
+[0] gram matrix processing start
+[2] gram matrix processing start
+[0] test matrix processing start
+rate: 0	 acc+: 0.994153(19723/19839), acc-: 0.142623(174/1220), g: 0.376549
+[2] test matrix processing start
+rate: 2	 acc+: 0.992238(19685/19839), acc-: 0.158197(193/1220), g: 0.396193
+[1] gram matrix processing start
+[3] gram matrix processing start
+[1] test matrix processing start
+rate: 1	 acc+: 0.992943(19699/19839), acc-: 0.158197(193/1220), g: 0.396334
+[3] test matrix processing start
+rate: 3	 acc+: 0.990877(19658/19839), acc-: 0.192623(235/1220), g: 0.436882
+[4] gram matrix processing start
+[6] gram matrix processing start
+[4] test matrix processing start
+rate: 4	 acc+: 0.990372(19648/19839), acc-: 0.213934(261/1220), g: 0.460299
+[5] gram matrix processing start
+[6] test matrix processing start
+rate: 6	 acc+: 0.987399(19589/19839), acc-: 0.244262(298/1220), g: 0.491105
+[7] gram matrix processing start
+[5] test matrix processing start
+rate: 5	 acc+: 0.988457(19610/19839), acc-: 0.200000(244/1220), g: 0.444625
+[8] gram matrix processing start
+[7] test matrix processing start
+rate: 7	 acc+: 0.986945(19580/19839), acc-: 0.266393(325/1220), g: 0.512753
+[10] gram matrix processing start
+[8] test matrix processing start
+rate: 8	 acc+: 0.986441(19570/19839), acc-: 0.263934(322/1220), g: 0.510251
+[9] gram matrix processing start
+[10] test matrix processing start
+rate: 10	 acc+: 0.984374(19529/19839), acc-: 0.263115(321/1220), g: 0.508924
+[11] gram matrix processing start
+[9] test matrix processing start
+rate: 9	 acc+: 0.985836(19558/19839), acc-: 0.248361(303/1220), g: 0.494816
+[12] gram matrix processing start
+[11] test matrix processing start
+rate: 11	 acc+: 0.983164(19505/19839), acc-: 0.285246(348/1220), g: 0.529569
+[14] gram matrix processing start
+[12] test matrix processing start
+rate: 12	 acc+: 0.982711(19496/19839), acc-: 0.280328(342/1220), g: 0.524863
+[13] gram matrix processing start
+[14] test matrix processing start
+rate: 14	 acc+: 0.979586(19434/19839), acc-: 0.319672(390/1220), g: 0.559595
+[15] gram matrix processing start
+[13] test matrix processing start
+rate: 13	 acc+: 0.982358(19489/19839), acc-: 0.301639(368/1220), g: 0.544351
+[15] test matrix processing start
+rate: 15	 acc+: 0.980644(19455/19839), acc-: 0.319672(390/1220), g: 0.559897
