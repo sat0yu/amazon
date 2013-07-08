@@ -43,7 +43,7 @@ def evaluate_RSOS(args):
     accP = nPosCorrect / nPosData
     accN = nNegCorrect / nNegData
     g = np.sqrt( accP * accN )
-    print 'rate: %d\t acc+: %f(%d/%d), acc-: %f(%d/%d), g: %f' % (rate,accP,int(nPosCorrect),nPosData,accN,int(nNegCorrect),nNegData,g)
+    print 'rate: %2d acc+: %f(%d/%d), acc-: %f(%d/%d), g: %f' % (rate,accP,int(nPosCorrect),nPosData,accN,int(nNegCorrect),nNegData,g)
     sys.stdout.flush()
 
 def execute():
@@ -65,14 +65,14 @@ def execute():
     whk = kernel.WeightendHammingKernel(uniq/max(uniq), 2)
 
     #RSOS
-    eval_ratio = range( len(posdata) / len(negdata) )
+    stripped_negdata = negdata[:,1:]    
     args = []
-    for i in eval_ratio:
-        if i == 0:
-            gained = negdata
-        else:
-            gained = np.vstack( (negdata, mlutil.randomSwapOverSampling(negdata, i)) )
-        metatraindata = np.vstack( (posdata, gained) )
+    for i in range( 1, len(posdata) / len(negdata) ):
+        gained = mlutil.randomSwapOverSampling(stripped_negdata, i)
+        labels = np.zeros( (len(gained), 1), dtype=np.int)
+        labeled = np.hstack( (labels, gained) )
+        merged = np.vstack( (negdata, labeled) )
+        metatraindata = np.vstack( (posdata, merged) )
         args.append( (i, whk, metatraindata, metatestdata) )
     
     #multiprocessing
