@@ -11,7 +11,7 @@ import kernel
 import mlutil
 
 def evaluate_RSOS(args):
-    rate, kernel, traindata, testdata = args
+    rate, nSwap, kernel, traindata, testdata = args
 
     #separate ACTION column from other features
     labels = traindata[:,0]
@@ -22,11 +22,11 @@ def evaluate_RSOS(args):
     nNegData = len( answers[answers[:]==0] )
 
     #precomputing
-    print '[%d] gram matrix processing start' % rate
+    #print '[%d] gram matrix processing start' % rate
     gram = kernel.gram(train)
     sys.stdout.flush()
 
-    print '[%d] test matrix processing start' % rate
+    #print '[%d] test matrix processing start' % rate
     mat = kernel.matrix(test, train)
     sys.stdout.flush()
 
@@ -43,7 +43,7 @@ def evaluate_RSOS(args):
     accP = nPosCorrect / nPosData
     accN = nNegCorrect / nNegData
     g = np.sqrt( accP * accN )
-    print 'rate: %2d acc+: %f(%d/%d), acc-: %f(%d/%d), g: %f' % (rate,accP,int(nPosCorrect),nPosData,accN,int(nNegCorrect),nNegData,g)
+    print 'rate:%2d nSwap:%2d, acc+: %f(%d/%d), acc-: %f(%d/%d), g: %f' % (rate,nSwap,accP,int(nPosCorrect),nPosData,accN,int(nNegCorrect),nNegData,g)
     sys.stdout.flush()
 
 def execute():
@@ -67,16 +67,17 @@ def execute():
     #RSOS
     stripped_negdata = negdata[:,1:]    
     args = []
-    for i in range( 1, len(posdata) / len(negdata) ):
-        gained = mlutil.randomSwapOverSampling(stripped_negdata, i)
-        labels = np.zeros( (len(gained), 1), dtype=np.int)
-        labeled = np.hstack( (labels, gained) )
-        merged = np.vstack( (negdata, labeled) )
-        metatraindata = np.vstack( (posdata, merged) )
-        args.append( (i, whk, metatraindata, metatestdata) )
+    for j in range( 1, len(stripped_negdata[0]) ):
+        for i in range( 1, len(posdata) / len(negdata) ):
+            gained = mlutil.randomSwapOverSampling(stripped_negdata, i, j)
+            labels = np.zeros( (len(gained), 1), dtype=np.int)
+            labeled = np.hstack( (labels, gained) )
+            merged = np.vstack( (negdata, labeled) )
+            metatraindata = np.vstack( (posdata, merged) )
+            args.append( (i, j, whk, metatraindata, metatestdata) )
     
     #multiprocessing
-    pool = Pool(2)
+    pool = Pool(4)
     pool.map(evaluate_RSOS, args)
 
 

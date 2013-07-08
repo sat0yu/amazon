@@ -37,12 +37,14 @@ def createLabeledDataset(np.ndarray[DTYPE_int_t, ndim=2] labeled, np.ndarray[DTY
 
     return (metaLabeled, metaUnlabeled)
 
-def randomSwapOverSampling(np.ndarray[DTYPE_int_t, ndim=2] X, int gain_ratio=1):
+def randomSwapOverSampling(np.ndarray[DTYPE_int_t, ndim=2] X, int gain_ratio=1, int nSwap=1):
     cdef int N = len(X)
     cdef int dim = len(X[0])
     cdef int i, j, idx
     cdef np.ndarray[DTYPE_int_t, ndim=2] gained, created
+    cdef np.ndarray[DTYPE_int_t, ndim=1] indices
     cdef bint isFirst = True
+
     for i in range(gain_ratio):
         # copy original data
         created = X.copy()
@@ -52,8 +54,9 @@ def randomSwapOverSampling(np.ndarray[DTYPE_int_t, ndim=2] X, int gain_ratio=1):
 
         # create new data
         for j in range(N):
-            idx = np.random.randint(dim)
-            created[j][idx] = X[np.random.randint(N)][idx]
+            indices = np.random.randint(0, dim, nSwap)
+            for idx in indices:
+                created[j][idx] = X[np.random.randint(N)][idx]
 
         # add created data
         if isFirst:
