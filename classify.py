@@ -83,7 +83,7 @@ def execute():
     print 'negative data: %d' % len(neg)
     
     ## DUS
-    trainset = mlutil.dividingUnderSampling(pos, neg, ratio=3)
+    trainset = mlutil.dividingUnderSampling(pos, neg, ratio=2)
     print 'given %d trainset' % len(trainset)
     print 'each traindata of trainset: ', trainset[0].shape
 
