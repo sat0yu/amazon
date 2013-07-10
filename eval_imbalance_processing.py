@@ -30,19 +30,8 @@ def execute():
     labels = metatraindata[:,0]
     metatrain = metatraindata[:,1:]
     print 'gram matrix processing start'
+    sys.stdout.flush()
     gram = whk.gram(metatrain)
-    
-    #initialize classifiers
-    clfs = []
-    weight_list = [0.01, 0.05, 0.1, 0.5, 1., 5., 10.]
-    for i in weight_list:
-        for j in weight_list:
-            clfs.append( svm.SVC(kernel='precomputed', class_weight={0:i, 1:j}) )
-    ## add 'auto' mode
-    clfs.append( svm.SVC(kernel='precomputed', class_weight='auto') )
-
-    #train each classifier
-    map(lambda clf_i: clf_i.fit(gram, labels), clfs)
 
     #precomputing
     #separate id column from other features
@@ -51,12 +40,18 @@ def execute():
     nNegData = len( metalabels[metalabels[:]==0] )
     metatest = metatestdata[:,1:]
     print 'test matrix processing start'
+    sys.stdout.flush()
     mat = whk.matrix(metatest, metatrain)
 
     #classify    
-    for i,w0 in enumerate(weight_list):
-        for j,w1 in enumerate(weight_list):
-            prediction = clfs[i*len(weight_list)+j].predict(mat).astype(np.int)
+    weight_list = np.arange(0.01, 0.1, 0.01)
+    weight_list = np.hstack((weight_list, np.arange(0.1, 1, 0.1) ))
+    weight_list = np.hstack((weight_list, np.arange(1, 10, 1) ))
+    for w0 in weight_list:
+        for w1 in weight_list:
+            clf = svm.SVC(kernel='precomputed', class_weight={0:w0, 1:w1})
+            clf.fit(gram, labels)
+            prediction = clf.predict(mat).astype(np.int)
 
             #output
             posPredict = prediction[metalabels[:]==1]
@@ -66,16 +61,18 @@ def execute():
             accP = nPosCorrect / nPosData
             accN = nNegCorrect / nNegData
             g = np.sqrt( accP * accN )
-            print '{0:%.2f, 1:%.2f}\t acc+: %f(%d/%d), acc-: %f(%d/%d), g: %f' % (w0,w1,accP,int(nPosCorrect),nPosData,accN,int(nNegCorrect),nNegData,g)
+            print '0:%4.2f, 1:%4.2f, acc+: %f(%d/%d), acc-: %f(%d/%d), g: %f' % (w0,w1,accP,int(nPosCorrect),nPosData,accN,int(nNegCorrect),nNegData,g)
             sys.stdout.flush()
 
     #print result, using 'auto' mode
-    prediction = clfs[len(clfs)-1].predict(mat).astype(np.int)
+    clf = svm.SVC(kernel='precomputed', class_weight='auto')
+    clf.fit(gram, labels)
+    prediction = clf.predict(mat).astype(np.int)
     posPredict = prediction[metalabels[:]==1]
     negPredict = prediction[metalabels[:]==0]
     accP = float( sum(posPredict) ) / len( metalabels[metalabels[:]==1] )
     accN = (float( len(negPredict) - sum(negPredict) )) / len( metalabels[metalabels[:]==0] )
-    print '"auto"\t\t acc+: %f, acc-: %f, g: %f' % (accP,accN,np.sqrt(accP * accN))
+    print '"auto", acc+: %f, acc-: %f, g: %f' % (accP,accN,np.sqrt(accP * accN))
     sys.stdout.flush()
 
 if __name__ == '__main__':
