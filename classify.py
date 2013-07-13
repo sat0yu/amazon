@@ -1,8 +1,9 @@
 #coding: utf-8;
 import numpy as np
 from sklearn import svm
+import ctypes
 from os import path
-from multiprocessing import Pool
+from multiprocessing import Pool, Array
 import sys
 
 import pyximport
@@ -10,8 +11,26 @@ pyximport.install(setup_args={'include_dirs':[np.get_include()]}, inplace=True)
 import kernel
 import mlutil
 
-def evaluate(arg):
-    gram, labels, evalmat, answers, w0, w1 = arg
+#global statement
+shared_gram_base = None
+shared_evalmat_base = None
+
+def train_and_test(args):
+    i, w0, w1, data = args
+    gramshape, labels, evalmatshape, answers = data
+    
+    global shared_gram_base
+    global shared_evalmat_base
+
+    print shared_gram_base
+    print shared_evalmat_base
+
+    gram = np.frombuffer( shared_gram_base )
+    gram = gram.reshape(gramshape)
+    evalmat = np.frombuffer( shared_evalmat_base )
+    evalmat = evalmat.reshape(evalmatshape)
+    
+    print "[%d] %d, %d" % (i,ctypes.addressof(gram.base.base), ctypes.addressof(evalmat.base.base))
 
     clf = svm.SVC(kernel='precomputed', class_weight={0:w0, 1:w1})
     clf.fit(gram, labels)
@@ -26,7 +45,7 @@ def evaluate(arg):
     g = np.sqrt( accP * accN )
 
     return (g, np.sqrt(w0*w1), w0, w1)
-            
+
 def execute():
     #read data
     rawtraindata = np.loadtxt(open("rawdata/train.csv", "rb"), dtype=np.int, delimiter=',', skiprows=1)
@@ -65,19 +84,34 @@ def execute():
     test = testdata[:,1:]
 
     #precomputing
-    print 'gram matrix: (%d,%d)' % (train.shape[0],train.shape[0])
     gram = whk.matrix_multiprocessing(train, train, 4)
-    print 'evaluation matrix: (%d,%d)' % (rawtrain.shape[0],train.shape[0])
+    global shared_gram_base
+    shared_gram_base = Array(ctypes.c_double, gram.shape[0]*gram.shape[1], lock=False)
+    shared_gram = np.frombuffer( shared_gram_base )
+    shared_gram = shared_gram.reshape(gram.shape)
+    shared_gram[:] = gram
+    print 'gram matrix: (%d,%d)' % (train.shape[0],train.shape[0])
+    print shared_gram.base.base
+
     evalmat = whk.matrix_multiprocessing(rawtrain, train, 4)
+    global shared_evalmat_base
+    shared_evalmat_base = Array(ctypes.c_double, evalmat.shape[0]*evalmat.shape[1], lock=False)
+    shared_evalmat = np.frombuffer( shared_evalmat_base )
+    shared_evalmat = shared_evalmat.reshape(evalmat.shape)
+    shared_evalmat[:] = evalmat
+    print 'evaluation matrix: (%d,%d)' % (rawtrain.shape[0],train.shape[0])
+    print shared_evalmat.base.base
 
     #evaluate class_weight
+    print "class_weight evaluating..."
     cw_list = np.arange(0.01, 0.1, 0.01)
     cw_list = np.hstack(( cw_list, np.arange(0.1, 1, 0.1) ))
     cw_list = np.hstack(( cw_list, np.arange(1, 10, 1.) ))
-    P = 4
-    pool = Pool(P)
-    args = [(gram, labels, evalmat, answers, w0, w1) for w0 in cw_list for w1 in cw_list]
-    scored_cw = pool.map(evaluate, args)
+    data = (gram.shape, labels, evalmat.shape, answers)
+    args = [(i*len(cw_list)+j,w0,w1,data) for j,w0 in enumerate(cw_list) for i,w1 in enumerate(cw_list)]
+    pool = Pool(4)
+    scored_cw = pool.map( train_and_test, args )
+    print "class_weight evaluation has been done."
 
     #precomputing
     testmat = whk.matrix_multiprocessing(test, train, 4)
