@@ -27,10 +27,6 @@ def evaluate(arg):
 
     return (g, np.sqrt(w0*w1), w0, w1)
             
-def calc(arg):
-    kernel, buf, train = arg
-    return kernel.matrix(buf,train)
-
 def execute():
     #read data
     rawtraindata = np.loadtxt(open("rawdata/train.csv", "rb"), dtype=np.int, delimiter=',', skiprows=1)
@@ -70,9 +66,9 @@ def execute():
 
     #precomputing
     print 'gram matrix: (%d,%d)' % (train.shape[0],train.shape[0])
-    gram = whk.gram(train)
+    gram = whk.matrix_multiprocessing(train, train, 4)
     print 'evaluation matrix: (%d,%d)' % (rawtrain.shape[0],train.shape[0])
-    evalmat = whk.matrix(rawtrain, train)
+    evalmat = whk.matrix_multiprocessing(rawtrain, train, 4)
 
     #evaluate class_weight
     cw_list = np.arange(0.01, 0.1, 0.01)
@@ -84,17 +80,7 @@ def execute():
     scored_cw = pool.map(evaluate, args)
 
     #precomputing
-    N = len(test)
-    P = 4
-    pool = Pool(P)
-    args = []
-    r = np.ceil( float(N) / P )
-    for pi in range(P):
-        buf = test[r*pi:r*(pi+1)]
-        print 'buf[%d] matrix: (%d,%d)' % (pi,buf.shape[0],train.shape[0])
-        args.append( (whk,buf,train) )
-    bufmat = pool.map(calc, args)
-    testmat = np.vstack(bufmat)
+    testmat = whk.matrix_multiprocessing(test, train, 4)
     print 'test mat', testmat.shape
 
     #weighred decision by majority

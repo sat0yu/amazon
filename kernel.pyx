@@ -2,12 +2,21 @@
 import numpy as np
 cimport numpy as np
 from abc import ABCMeta, abstractmethod
+from multiprocessing import Pool
 import sys
 
 DTYPE_int = np.int
 DTYPE_float = np.float
 ctypedef np.int_t DTYPE_int_t
 ctypedef np.float_t DTYPE_float_t
+
+class MultiprocessingHelper(object):
+    def __init__(self, cls, mtd_name):
+        self.cls = cls
+        self.mtd_name = mtd_name
+
+    def __call__(self, args):
+        return getattr(self.cls, self.mtd_name)(*args)
 
 class IntKernel():
     __metaclass__ = ABCMeta
@@ -32,6 +41,21 @@ class IntKernel():
         for i in range(N):
             for j in range(M):
                 mat[i][j] = self.val(X1[i], X2[j])
+        return mat
+
+    def matrix_multiprocessing(self, np.ndarray[DTYPE_int_t, ndim=2] X1, np.ndarray[DTYPE_int_t, ndim=2] X2, int nProcessor=0):
+        cdef int width = ( len(X1) / nProcessor ) + 1
+        cdef int i
+        cdef np.ndarray[DTYPE_float_t, ndim=2] mat
+        cdef np.ndarray[DTYPE_int_t, ndim=2] buf
+
+        args = []
+        pool = Pool(nProcessor)
+        for i in range(nProcessor):
+            buf = X1[width*i:width*(i+1)]
+            args.append( (buf,X2) )
+
+        mat = np.vstack( pool.map(MultiprocessingHelper(self, 'matrix'), args) )
         return mat
 
 class FloatKernel():
